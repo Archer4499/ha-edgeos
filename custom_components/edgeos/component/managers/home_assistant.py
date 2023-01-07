@@ -1025,12 +1025,12 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
         is_rate_stats = entity_suffix in STATS_RATE
 
         if is_rate_stats:
-            unit_of_measurement = self._get_rate_unit_of_measurement()
-            state = self._convert_unit(state)
+            unit_of_measurement = self._get_unit_of_measurement(is_rate_stats)
+            state = self._convert_unit(state, is_rate_stats)
 
         elif entity_suffix in STATS_TRAFFIC:
-            unit_of_measurement = self._get_unit_of_measurement()
-            state = self._convert_unit(state)
+            unit_of_measurement = self._get_unit_of_measurement(is_rate_stats)
+            state = self._convert_unit(state, is_rate_stats)
 
         else:
             unit_of_measurement = str(STATS_UNITS.get(entity_suffix)).capitalize()
@@ -1048,17 +1048,17 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
         entity_name = f"{device_name} {entity_suffix}"
 
         is_monitored = self.storage_api.monitored_interfaces.get(interface.unique_id, False)
-
-        is_rate_stats = entity_suffix in STATS_RATE
         icon = STATS_ICONS.get(entity_suffix)
 
+        is_rate_stats = entity_suffix in STATS_RATE
+
         if is_rate_stats:
-            unit_of_measurement = self._get_rate_unit_of_measurement()
-            state = self._convert_unit(state)
+            unit_of_measurement = self._get_unit_of_measurement(is_rate_stats)
+            state = self._convert_unit(state, is_rate_stats)
 
         elif entity_suffix in STATS_TRAFFIC:
-            unit_of_measurement = self._get_unit_of_measurement()
-            state = self._convert_unit(state)
+            unit_of_measurement = self._get_unit_of_measurement(is_rate_stats)
+            state = self._convert_unit(state, is_rate_stats)
 
         else:
             unit_of_measurement = str(STATS_UNITS.get(entity_suffix)).capitalize()
@@ -1306,14 +1306,18 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
 
         return interface_item
 
-    def _convert_unit(self, value: float) -> float:
-        unit_factor = UNIT_MAPPING.get(self.storage_api.unit, BYTE)
+    def _convert_unit(self, value: float, is_rate_stats: bool) -> float:
+        if is_rate_stats:
+            unit_factor = RATE_UNIT_MAPPING.get(self.storage_api.unit, BIT)
+            digits = 0 if unit_factor == BIT else 3
+        else:
+            unit_factor = UNIT_MAPPING.get(self.storage_api.unit, BYTE)
+            digits = 0 if unit_factor == BYTE else 3
+
         result = value
 
         if result > 0:
             result = result / unit_factor
-
-        digits = 0 if unit_factor == BYTE else 3
 
         result = self._format_number(result, digits)
 
@@ -1329,14 +1333,11 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
 
         return result
 
-    def _get_unit_of_measurement(self) -> str:
-        result = UNIT_OF_MEASUREMENT_MAPPING.get(self.storage_api.unit, "B")
-
-        return result
-
-    def _get_rate_unit_of_measurement(self) -> str:
-        unit_of_measurement = self._get_unit_of_measurement()
-        result = f"{unit_of_measurement}/ps"
+    def _get_unit_of_measurement(self, is_rate_stats: bool) -> str:
+        if is_rate_stats:
+            result = RATE_UNIT_OF_MEASUREMENT_MAPPING.get(self.storage_api.unit, "bit/s")
+        else:
+            result = UNIT_OF_MEASUREMENT_MAPPING.get(self.storage_api.unit, "B")
 
         return result
 
