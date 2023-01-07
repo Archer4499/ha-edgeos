@@ -5,7 +5,7 @@ from __future__ import annotations
 
 from asyncio import sleep
 from collections.abc import Awaitable, Callable
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 import logging
 import sys
 
@@ -14,7 +14,11 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.components.select import SelectEntityDescription
-from homeassistant.components.sensor import SensorEntityDescription, SensorStateClass
+from homeassistant.components.sensor import (
+    SensorEntityDescription,
+    SensorStateClass,
+    SensorDeviceClass,
+)
 from homeassistant.components.switch import SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_OFF, STATE_ON
@@ -549,14 +553,22 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
             system_data.fw_version = discovery_data.get(DISCOVER_DATA_FW_VERSION)
             system_data.product = discovery_data.get(DISCOVER_DATA_PRODUCT)
 
-            uptime = float(system_stats_data.get(SYSTEM_STATS_DATA_UPTIME, 0))
-
             system_data.cpu = int(system_stats_data.get(SYSTEM_STATS_DATA_CPU, 0))
             system_data.mem = int(system_stats_data.get(SYSTEM_STATS_DATA_MEM, 0))
 
-            if uptime != system_data.uptime:
+            uptime = int(system_stats_data.get(SYSTEM_STATS_DATA_UPTIME, 0))
+            uptime_delta = timedelta(seconds=uptime)
+            now = datetime.now(tz=timezone.utc).replace(microsecond=0)
+            last_reset = now - uptime_delta
+
+            if system_data.last_reset is None:
+                system_data.last_reset = last_reset
                 system_data.uptime = uptime
-                system_data.last_reset = self._get_last_reset(uptime)
+            else:
+                changed_by = abs(last_reset - system_data.last_reset)
+                if changed_by > timedelta(seconds=10):
+                    system_data.last_reset = last_reset
+                    system_data.uptime = uptime
 
         except Exception as ex:
             exc_type, exc_obj, tb = sys.exc_info()
@@ -846,7 +858,7 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
                 key=unique_id,
                 name=entity_name,
                 icon=icon,
-                state_class=SensorStateClass.TOTAL_INCREASING
+                device_class=SensorDeviceClass.TIMESTAMP
             )
 
             self.entity_manager.set_entity(DOMAIN_SENSOR,
@@ -1392,15 +1404,6 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
                 set_func = storage_data_import_keys.get(key)
 
                 await set_func(data_item)
-
-        return result
-
-    @staticmethod
-    def _get_last_reset(uptime):
-        now = datetime.now().timestamp()
-        last_reset = int(now) - uptime
-
-        result = datetime.fromtimestamp(last_reset)
 
         return result
 
