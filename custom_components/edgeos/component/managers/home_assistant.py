@@ -14,7 +14,11 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.components.select import SelectEntityDescription
-from homeassistant.components.sensor import SensorEntityDescription, SensorStateClass
+from homeassistant.components.sensor import (
+    SensorEntityDescription,
+    SensorStateClass,
+    SensorDeviceClass,
+)
 from homeassistant.components.switch import SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_OFF, STATE_ON
@@ -1027,17 +1031,20 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
         if is_rate_stats:
             unit_of_measurement = self._get_rate_unit_of_measurement()
             state = self._convert_unit(state)
+            device_class = SensorDeviceClass.DATA_RATE
 
         elif entity_suffix in STATS_TRAFFIC:
             unit_of_measurement = self._get_unit_of_measurement()
             state = self._convert_unit(state)
+            device_class = SensorDeviceClass.DATA_SIZE
 
         else:
             unit_of_measurement = str(STATS_UNITS.get(entity_suffix)).capitalize()
+            device_class = None
 
         state_class = SensorStateClass.MEASUREMENT if is_rate_stats else SensorStateClass.TOTAL_INCREASING
 
-        self._load_stats_sensor(device_name, entity_name, state, unit_of_measurement, icon, state_class, is_monitored)
+        self._load_stats_sensor(device_name, entity_name, state, unit_of_measurement, icon, state_class, device_class, is_monitored)
 
     def _load_interface_stats_sensor(self,
                                      interface: EdgeOSInterfaceData,
@@ -1055,17 +1062,20 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
         if is_rate_stats:
             unit_of_measurement = self._get_rate_unit_of_measurement()
             state = self._convert_unit(state)
+            device_class = SensorDeviceClass.DATA_RATE
 
         elif entity_suffix in STATS_TRAFFIC:
             unit_of_measurement = self._get_unit_of_measurement()
             state = self._convert_unit(state)
+            device_class = SensorDeviceClass.DATA_SIZE
 
         else:
             unit_of_measurement = str(STATS_UNITS.get(entity_suffix)).capitalize()
+            device_class = None
 
         state_class = SensorStateClass.MEASUREMENT if is_rate_stats else SensorStateClass.TOTAL_INCREASING
 
-        self._load_stats_sensor(device_name, entity_name, state, unit_of_measurement, icon, state_class, is_monitored)
+        self._load_stats_sensor(device_name, entity_name, state, unit_of_measurement, icon, state_class, device_class, is_monitored)
 
     def _load_stats_sensor(self,
                            device_name: str,
@@ -1074,6 +1084,7 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
                            unit_of_measurement: str,
                            icon: str | None,
                            state_class: SensorStateClass,
+                           device_class: SensorDeviceClass | None,
                            is_monitored: bool):
         try:
             attributes = {
@@ -1087,6 +1098,7 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
                 name=entity_name,
                 icon=icon,
                 state_class=state_class,
+                device_class=device_class,
                 native_unit_of_measurement=unit_of_measurement,
             )
 
