@@ -675,6 +675,9 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
         if configuration_url is not None:
             device_details_data["configuration_url"] = configuration_url
 
+        if name != self.system_name:
+            device_details_data["via_device"] = (DEFAULT_NAME, self.system_name)
+
         if device_details is None or device_details != device_details_data:
             self.device_manager.set(name, device_details_data)
 
