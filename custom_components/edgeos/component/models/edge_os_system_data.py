@@ -7,6 +7,7 @@ from ..helpers.const import *
 
 class EdgeOSSystemData:
     hostname: str | None
+    configuration_url: str | None
     timezone: str | None
     ntp_servers: list | None
     hardware_offload: bool | None
@@ -29,6 +30,7 @@ class EdgeOSSystemData:
 
     def __init__(self):
         self.hostname = None
+        self.configuration_url = None
         self.timezone = None
         self.ntp_servers = None
         self.hardware_offload = None

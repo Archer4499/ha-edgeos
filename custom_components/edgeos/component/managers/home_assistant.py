@@ -374,6 +374,7 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
             system_data = EdgeOSSystemData() if self._system is None else self._system
 
             system_data.hostname = system_details.get(SYSTEM_DATA_HOSTNAME)
+            system_data.configuration_url = self.config_data.url
             system_data.timezone = system_details.get(SYSTEM_DATA_TIME_ZONE)
 
             ntp: dict = system_details.get(SYSTEM_DATA_NTP, {})
@@ -657,7 +658,8 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
 
         return device
 
-    def _set_ha_device(self, name: str, model: str, manufacturer: str, version: str | None = None):
+    def _set_ha_device(self, name: str, model: str, manufacturer: str,
+                       version: str | None = None, configuration_url: str | None = None):
         device_details = self.device_manager.get(name)
 
         device_details_data = {
@@ -670,13 +672,17 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
         if version is not None:
             device_details_data["sw_version"] = version
 
+        if configuration_url is not None:
+            device_details_data["configuration_url"] = configuration_url
+
         if device_details is None or device_details != device_details_data:
             self.device_manager.set(name, device_details_data)
 
             _LOGGER.debug(f"Created HA device {name} [{model}]")
 
     def _load_main_device(self):
-        self._set_ha_device(self.system_name, self._system.product, MANUFACTURER, self._system.fw_version)
+        self._set_ha_device(self.system_name, self._system.product, MANUFACTURER,
+                            self._system.fw_version, self._system.configuration_url)
 
     def _load_device_device(self, device: EdgeOSDeviceData):
         name = self._get_device_name(device)
