@@ -666,14 +666,10 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
             "identifiers": {(DEFAULT_NAME, name)},
             "name": name,
             "manufacturer": manufacturer,
-            "model": model
+            "model": model,
+            "sw_version": version,
+            "configuration_url": configuration_url,
         }
-
-        if version is not None:
-            device_details_data["sw_version"] = version
-
-        if configuration_url is not None:
-            device_details_data["configuration_url"] = configuration_url
 
         if name != self.system_name:
             device_details_data["via_device"] = (DEFAULT_NAME, self.system_name)
