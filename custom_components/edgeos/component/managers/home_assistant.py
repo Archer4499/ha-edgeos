@@ -15,6 +15,10 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.components.select import SelectEntityDescription
 from homeassistant.components.sensor import SensorEntityDescription, SensorStateClass
+from homeassistant.components.update import (
+    UpdateEntityDescription,
+    UpdateDeviceClass,
+)
 from homeassistant.components.switch import SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_OFF, STATE_ON
@@ -229,7 +233,7 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
         self._load_cpu_sensor()
         self._load_ram_sensor()
         self._load_uptime_sensor()
-        self._load_firmware_upgrade_binary_sensor()
+        self._load_firmware_upgrade_update()
         self._load_log_incoming_messages_switch()
 
         for unique_id in self._devices:
@@ -861,7 +865,7 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
                 ex, f"Failed to load sensor for {entity_name}"
             )
 
-    def _load_firmware_upgrade_binary_sensor(self):
+    def _load_firmware_upgrade_update(self):
         device_name = self.system_name
         entity_name = f"{device_name} Firmware Upgrade"
 
@@ -870,28 +874,34 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
 
             attributes = {
                 ATTR_FRIENDLY_NAME: entity_name,
-                SYSTEM_INFO_DATA_FW_LATEST_URL: self._system.upgrade_url,
-                SYSTEM_INFO_DATA_FW_LATEST_VERSION: self._system.upgrade_version
             }
 
-            unique_id = EntityData.generate_unique_id(DOMAIN_BINARY_SENSOR, entity_name)
+            unique_id = EntityData.generate_unique_id(DOMAIN_UPDATE, entity_name)
 
-            entity_description = BinarySensorEntityDescription(
+            entity_description = UpdateEntityDescription(
                 key=unique_id,
                 name=entity_name,
-                device_class=BinarySensorDeviceClass.UPDATE
+                device_class=UpdateDeviceClass.FIRMWARE,
             )
 
-            self.entity_manager.set_entity(DOMAIN_BINARY_SENSOR,
+            details = {
+                ATTR_UPDATE_TITLE: DEFAULT_NAME,
+                ATTR_UPDATE_INSTALLED_VERSION: self._system.sw_version,
+                ATTR_UPDATE_LATEST_VERSION: self._system.upgrade_version,
+                ATTR_UPDATE_RELEASE_URL: SYSTEM_INFO_DATA_FW_CHANGELOG_URL,
+            }
+
+            self.entity_manager.set_entity(DOMAIN_UPDATE,
                                            self.entry_id,
                                            state,
                                            attributes,
                                            device_name,
-                                           entity_description)
+                                           entity_description,
+                                           details=details)
 
         except Exception as ex:
             self.log_exception(
-                ex, f"Failed to load sensor for {entity_name}"
+                ex, f"Failed to load update sensor for {entity_name}"
             )
 
     def _load_log_incoming_messages_switch(self):
