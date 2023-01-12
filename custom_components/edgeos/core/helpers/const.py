@@ -5,6 +5,7 @@ from homeassistant.components.light import DOMAIN as DOMAIN_LIGHT
 from homeassistant.components.media_source import DOMAIN as DOMAIN_MEDIA_SOURCE
 from homeassistant.components.select import DOMAIN as DOMAIN_SELECT
 from homeassistant.components.sensor import DOMAIN as DOMAIN_SENSOR
+from homeassistant.components.update import DOMAIN as DOMAIN_UPDATE
 from homeassistant.components.stream import DOMAIN as DOMAIN_STREAM
 from homeassistant.components.switch import DOMAIN as DOMAIN_SWITCH
 from homeassistant.components.vacuum import DOMAIN as DOMAIN_VACUUM
@@ -18,6 +19,7 @@ SUPPORTED_PLATFORMS = [
     DOMAIN_SWITCH,
     DOMAIN_VACUUM,
     DOMAIN_SENSOR,
+    DOMAIN_UPDATE,
     DOMAIN_LIGHT,
     DOMAIN_DEVICE_TRACKER
 ]
@@ -54,6 +56,11 @@ ATTR_STREAM_FPS = "stream_fps"
 ATTR_MODE_RECORD = "record_mode"
 ATTR_FEATURES = "features"
 ATTR_FANS_SPEED_LIST = "fan_speed_list"
+
+ATTR_UPDATE_TITLE = "title"
+ATTR_UPDATE_INSTALLED_VERSION = "installed_version"
+ATTR_UPDATE_LATEST_VERSION = "latest_version"
+ATTR_UPDATE_RELEASE_URL = "release_url"
 
 PROTOCOLS = {True: "https", False: "http"}
 WS_PROTOCOLS = {True: "wss", False: "ws"}
