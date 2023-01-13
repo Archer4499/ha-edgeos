@@ -940,7 +940,11 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
 
             attributes = {
                 ATTR_FRIENDLY_NAME: entity_name,
-                LAST_ACTIVITY: device.last_activity_in_seconds
+                DEVICE_DATA_NAME: device.hostname,
+                DEVICE_DATA_DOMAIN: device.domain,
+                DEVICE_DATA_IP: device.ip,
+                DEVICE_DATA_MAC: device.mac,
+                LAST_ACTIVITY: device.last_activity_in_seconds,
             }
 
             unique_id = EntityData.generate_unique_id(DOMAIN_DEVICE_TRACKER, entity_name)
