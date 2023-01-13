@@ -882,6 +882,7 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
                 key=unique_id,
                 name=entity_name,
                 device_class=UpdateDeviceClass.FIRMWARE,
+                entity_category=EntityCategory.DIAGNOSTIC
             )
 
             details = {
