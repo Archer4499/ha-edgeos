@@ -156,7 +156,7 @@ ADDRESS_LIST = "addresses"
 FW_LATEST = "addresses"
 ADDRESS_IPV4 = "ipv4"
 ADDRESS_HW_ADDR = "hwaddr"
-LAST_ACTIVITY = "Last Activity"
+LAST_ACTIVITY = "last_activity"
 
 RESPONSE_SUCCESS_KEY = "success"
 RESPONSE_ERROR_KEY = "error"
