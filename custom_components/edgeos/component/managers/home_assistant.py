@@ -1050,7 +1050,10 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
 
         state_class = SensorStateClass.MEASUREMENT if is_rate_stats else SensorStateClass.TOTAL_INCREASING
 
-        self._load_stats_sensor(device_name, entity_name, state, unit_of_measurement, icon, state_class, is_monitored)
+        entity_category = EntityCategory.DIAGNOSTIC
+
+        self._load_stats_sensor(device_name, entity_name, state, unit_of_measurement,
+                                icon, state_class, is_monitored, entity_category)
 
     def _load_interface_stats_sensor(self,
                                      interface: EdgeOSInterfaceData,
@@ -1078,7 +1081,8 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
 
         state_class = SensorStateClass.MEASUREMENT if is_rate_stats else SensorStateClass.TOTAL_INCREASING
 
-        self._load_stats_sensor(device_name, entity_name, state, unit_of_measurement, icon, state_class, is_monitored)
+        self._load_stats_sensor(device_name, entity_name, state, unit_of_measurement,
+                                icon, state_class, is_monitored)
 
     def _load_stats_sensor(self,
                            device_name: str,
@@ -1087,7 +1091,8 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
                            unit_of_measurement: str,
                            icon: str | None,
                            state_class: SensorStateClass,
-                           is_monitored: bool):
+                           is_monitored: bool,
+                           entity_category: EntityCategory | None = None):
         try:
             attributes = {
                 ATTR_FRIENDLY_NAME: entity_name
@@ -1101,6 +1106,7 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
                 icon=icon,
                 state_class=state_class,
                 native_unit_of_measurement=unit_of_measurement,
+                entity_category=entity_category,
             )
 
             if unit_of_measurement.lower() in [TRAFFIC_DATA_ERRORS, TRAFFIC_DATA_PACKETS, TRAFFIC_DATA_DROPPED]:
