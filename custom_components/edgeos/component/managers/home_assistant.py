@@ -678,13 +678,26 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
     def _load_main_device(self):
         self._set_ha_device(self.system_name, self._system.product, MANUFACTURER, self._system.fw_version)
 
-    def _load_device_device(self, device: EdgeOSDeviceData):
-        name = self._get_device_name(device)
-        self._set_ha_device(name, "Device", DEFAULT_NAME)
-
     def _load_interface_device(self, interface: EdgeOSInterfaceData):
         name = self._get_interface_name(interface)
         self._set_ha_device(name, "Interface", DEFAULT_NAME)
+
+    def _load_device_device(self, device: EdgeOSDeviceData):
+        name = self._get_device_name(device)
+        device_details = self.device_manager.get(name)
+
+        device_details_data = {
+            "default_name": name,
+            "default_manufacturer": DEFAULT_NAME,
+            "default_model": "Device",
+            "connections": {("mac", device.mac)},
+            "via_device": (DEFAULT_NAME, self.system_name),
+        }
+
+        if device_details is None or device_details != device_details_data:
+            self.device_manager.set(name, device_details_data)
+
+            _LOGGER.debug(f"Created HA device {name} [Device]")
 
     def _load_unit_select(self):
         try:
