@@ -31,7 +31,7 @@ class DeviceManager:
 
         device = self._devices[name]
 
-        device_identifiers = device.get("identifiers")
+        device_identifiers = device.get("identifiers", {})
         device_connections = device.get("connections", {})
 
         dr = async_get(self._hass)
