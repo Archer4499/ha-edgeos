@@ -458,10 +458,10 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
                         self.unique_log(logging.INFO, message)
 
                 interface.description = data.get(INTERFACE_DATA_DESCRIPTION)
-                interface.duplex = data.get(INTERFACE_DATA_DUPLEX)
-                interface.speed = data.get(INTERFACE_DATA_SPEED)
+                interface.config_duplex = data.get(INTERFACE_DATA_DUPLEX)
+                interface.config_speed = data.get(INTERFACE_DATA_SPEED)
                 interface.bridge_group = data.get(INTERFACE_DATA_BRIDGE_GROUP)
-                interface.address = data.get(INTERFACE_DATA_ADDRESS)
+                interface.config_address = data.get(INTERFACE_DATA_ADDRESS)
                 interface.aging = data.get(INTERFACE_DATA_AGING)
                 interface.bridged_conntrack = data.get(INTERFACE_DATA_BRIDGED_CONNTRACK)
                 interface.hello_time = data.get(INTERFACE_DATA_HELLO_TIME)
@@ -488,11 +488,13 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
     def _update_interface_stats(interface: EdgeOSInterfaceData, data: dict):
         try:
             if data is not None:
-                interface.up = str(data.get(INTERFACE_DATA_UP, False)).lower() == TRUE_STR
-                interface.l1up = str(data.get(INTERFACE_DATA_LINK_UP, False)).lower() == TRUE_STR
+                interface.up = data.get(INTERFACE_DATA_UP, FALSE_STR).lower() == TRUE_STR
+                interface.l1up = data.get(INTERFACE_DATA_LINK_UP, FALSE_STR).lower() == TRUE_STR
+                interface.duplex = data.get(INTERFACE_DATA_DUPLEX)
+                interface.speed = data.get(INTERFACE_DATA_SPEED)
                 interface.mac = data.get(INTERFACE_DATA_MAC)
                 interface.multicast = data.get(INTERFACE_DATA_MULTICAST, 0)
-                interface.address = data.get(ADDRESS_LIST, [])
+                interface.address = data.get(ADDRESS_LIST)
 
                 directions = [interface.received, interface.sent]
 

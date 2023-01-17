@@ -9,10 +9,13 @@ class EdgeOSInterfaceData:
     name: str
     interface_type: str | None
     duplex: str | None
+    config_duplex: str | None
     speed: str | None
+    config_speed: str | None
     description: str | None
     bridge_group: str | None
     address: list | None
+    config_address: list | None
     aging: str | None
     bridged_conntrack: str | None
     hello_time: str | None
@@ -33,9 +36,12 @@ class EdgeOSInterfaceData:
         self.interface_type = None
         self.description = None
         self.duplex = None
+        self.config_duplex = None
         self.speed = None
+        self.config_speed = None
         self.bridge_group = None
         self.address = None
+        self.config_address = None
         self.aging = None
         self.bridged_conntrack = None
         self.hello_time = None
@@ -63,9 +69,12 @@ class EdgeOSInterfaceData:
             INTERFACE_DATA_TYPE: self.interface_type,
             INTERFACE_DATA_HANDLER: self.handler.name,
             INTERFACE_DATA_DUPLEX: self.duplex,
+            INTERFACE_DATA_CONFIG_DUPLEX: self.config_duplex,
             INTERFACE_DATA_SPEED: self.speed,
+            INTERFACE_DATA_CONFIG_SPEED: self.config_speed,
             INTERFACE_DATA_BRIDGE_GROUP: self.bridge_group,
             INTERFACE_DATA_ADDRESS: self.address,
+            INTERFACE_DATA_CONFIG_ADDRESS: self.config_address,
             INTERFACE_DATA_AGING: self.aging,
             INTERFACE_DATA_BRIDGED_CONNTRACK: self.bridged_conntrack,
             INTERFACE_DATA_HELLO_TIME: self.hello_time,
