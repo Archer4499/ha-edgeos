@@ -1117,7 +1117,9 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
 
             attributes = {
                 ATTR_FRIENDLY_NAME: entity_name,
-                ADDRESS_LIST: interface.address
+                INTERFACE_DATA_CONFIG_ADDRESS: interface.config_address,
+                INTERFACE_DATA_CONFIG_DUPLEX: interface.config_duplex,
+                INTERFACE_DATA_CONFIG_SPEED: interface.config_speed,
             }
 
             unique_id = EntityData.generate_unique_id(DOMAIN_SWITCH, entity_name)
@@ -1159,7 +1161,9 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
 
             attributes = {
                 ATTR_FRIENDLY_NAME: entity_name,
-                ADDRESS_LIST: interface.address
+                INTERFACE_DATA_CONFIG_ADDRESS: interface.config_address,
+                INTERFACE_DATA_CONFIG_DUPLEX: interface.config_duplex,
+                INTERFACE_DATA_CONFIG_SPEED: interface.config_speed,
             }
 
             unique_id = EntityData.generate_unique_id(DOMAIN_BINARY_SENSOR, entity_name)
@@ -1191,7 +1195,9 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
 
             attributes = {
                 ATTR_FRIENDLY_NAME: entity_name,
-                ADDRESS_LIST: interface.address
+                ADDRESS_LIST: interface.address,
+                INTERFACE_DATA_DUPLEX: interface.duplex,
+                INTERFACE_DATA_SPEED: interface.speed,
             }
 
             unique_id = EntityData.generate_unique_id(DOMAIN_BINARY_SENSOR, entity_name)
