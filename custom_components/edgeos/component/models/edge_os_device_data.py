@@ -50,7 +50,7 @@ class EdgeOSDeviceData:
     def last_activity_in_seconds(self) -> float:
         now = datetime.now().timestamp()
 
-        diff = int(now) - self.last_activity
+        diff = now - self.last_activity
         last_activity_in_seconds = timedelta(seconds=diff).total_seconds()
 
         return last_activity_in_seconds
