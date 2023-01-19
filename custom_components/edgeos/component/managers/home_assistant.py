@@ -235,9 +235,6 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
         for unique_id in self._devices:
             device_item = self._get_device(unique_id)
 
-            if device_item.is_leased:
-                continue
-
             self._load_device_monitor_switch(device_item)
             self._load_device_tracker(device_item)
 
@@ -519,18 +516,17 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
     @staticmethod
     def _update_device_stats(device_data: EdgeOSDeviceData, data: dict):
         try:
-            if not device_data.is_leased:
-                stats = [device_data.received, device_data.sent]
+            stats = [device_data.received, device_data.sent]
 
-                for stat in stats:
-                    stat_data = {}
-                    for stat_key in TRAFFIC_DATA_DEVICE_ITEMS:
-                        key = f"{stat.direction}_{stat_key}"
-                        stat_data_item = TRAFFIC_DATA_DEVICE_ITEMS.get(stat_key)
+            for stat in stats:
+                stat_data = {}
+                for stat_key in TRAFFIC_DATA_DEVICE_ITEMS:
+                    key = f"{stat.direction}_{stat_key}"
+                    stat_data_item = TRAFFIC_DATA_DEVICE_ITEMS.get(stat_key)
 
-                        stat_data[stat_data_item] = data.get(key)
+                    stat_data[stat_data_item] = data.get(key)
 
-                    stat.update(stat_data)
+                stat.update(stat_data)
 
         except Exception as ex:
             exc_type, exc_obj, tb = sys.exc_info()
@@ -570,16 +566,7 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
 
     def _extract_unknown_devices(self):
         try:
-            unknown_devices = 0
-            data_leases_stats = self.api.data.get(API_DATA_DHCP_STATS, {})
-
-            subnets = data_leases_stats.get(DHCP_SERVER_STATS, {})
-
-            for subnet in subnets:
-                subnet_data = subnets.get(subnet, {})
-                unknown_devices += int(subnet_data.get(DHCP_SERVER_LEASED, 0))
-
-            self._system.leased_devices = unknown_devices
+            leased_device_list = {}
 
             data_leases = self.api.data.get(API_DATA_DHCP_LEASES, {})
             data_server_leases = data_leases.get(DHCP_SERVER_LEASES, {})
@@ -590,14 +577,14 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
                 for ip in subnet_data:
                     device_data = subnet_data.get(ip)
 
+                    mac = device_data.get(DEVICE_DATA_MAC)
                     hostname = device_data.get(DHCP_SERVER_LEASES_CLIENT_HOSTNAME)
 
-                    static_mapping_data = {
-                        DHCP_SERVER_IP_ADDRESS: ip,
-                        DHCP_SERVER_MAC_ADDRESS: device_data.get(DEVICE_DATA_MAC)
-                    }
+                    leased_device_list[mac] = [hostname, ip]
 
-                    self._set_device(hostname, None, static_mapping_data, True)
+            if leased_device_list != self._system.leased_device_list:
+                self._system.leased_devices = len(leased_device_list)
+                self._system.leased_device_list = leased_device_list
         except Exception as ex:
             exc_type, exc_obj, tb = sys.exc_info()
             line_number = tb.tb_lineno
@@ -623,21 +610,21 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
                     for hostname in static_mappings:
                         static_mapping_data = static_mappings.get(hostname, {})
 
-                        self._set_device(hostname, domain_name, static_mapping_data, False)
+                        self._set_device(hostname, domain_name, static_mapping_data)
         except Exception as ex:
             exc_type, exc_obj, tb = sys.exc_info()
             line_number = tb.tb_lineno
 
             _LOGGER.error(f"Failed to extract Devices data, Error: {ex}, Line: {line_number}")
 
-    def _set_device(self, hostname: str, domain_name: str | None, static_mapping_data: dict, is_leased: bool):
+    def _set_device(self, hostname: str, domain_name: str | None, static_mapping_data: dict):
         ip_address = static_mapping_data.get(DHCP_SERVER_IP_ADDRESS)
         mac_address = static_mapping_data.get(DHCP_SERVER_MAC_ADDRESS)
 
         existing_device_data = self._devices.get(mac_address)
 
         if existing_device_data is None:
-            device_data = EdgeOSDeviceData(hostname, ip_address, mac_address, domain_name, is_leased)
+            device_data = EdgeOSDeviceData(hostname, ip_address, mac_address, domain_name)
 
         else:
             device_data = existing_device_data
@@ -725,17 +712,14 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
         try:
             state = self._system.leased_devices
 
-            leased_devices = []
-
-            for unique_id in self._devices:
-                device = self._devices.get(unique_id)
-
-                if device.is_leased:
-                    leased_devices.append(f"{device.hostname} ({device.ip})")
+            leased_device_list = [f"{leased_device[0]} ({leased_device[1]})"
+                                  for leased_device in self._system.leased_device_list.values()]
+            if not leased_device_list:
+                leased_device_list = None
 
             attributes = {
                 ATTR_FRIENDLY_NAME: entity_name,
-                DHCP_SERVER_LEASED: leased_devices
+                DHCP_SERVER_LEASED: leased_device_list
             }
 
             unique_id = EntityData.generate_unique_id(DOMAIN_SENSOR, entity_name)
