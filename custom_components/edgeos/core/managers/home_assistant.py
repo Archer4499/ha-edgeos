@@ -277,6 +277,11 @@ class HomeAssistantManager:
         key = f"{entity_id}:{action_name}"
         self._actions[key] = action
 
+    def delete_action(self, entity_id: str, action_name: str):
+        key = f"{entity_id}:{action_name}"
+        if key in self._actions:
+            del self._actions[key]
+
     def get_action(self, entity_id: str, action_name: str):
         key = f"{entity_id}:{action_name}"
         action = self._actions.get(key)
