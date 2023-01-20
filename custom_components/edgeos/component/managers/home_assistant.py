@@ -592,49 +592,54 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
             _LOGGER.error(f"Failed to extract Unknown Devices data, Error: {ex}, Line: {line_number}")
 
     async def _extract_devices(self, data: dict):
+        service = data.get(DATA_SYSTEM_SERVICE, {})
+        dhcp_server = service.get(DATA_SYSTEM_SERVICE_DHCP_SERVER, {})
+        shared_network_names = dhcp_server.get(DHCP_SERVER_SHARED_NETWORK_NAME, {})
+
+        extracted_devices = {}
+
+        for shared_network_name_data in shared_network_names.values():
+            subnets = shared_network_name_data.get(DHCP_SERVER_SUBNET, {})
+
+            for subnet_data in subnets.values():
+                domain_name = subnet_data.get(SYSTEM_DATA_DOMAIN_NAME)
+                static_mappings = subnet_data.get(DHCP_SERVER_STATIC_MAPPING, {})
+
+                for hostname, static_mapping_data in static_mappings.items():
+                    ip_address = static_mapping_data.get(DHCP_SERVER_IP_ADDRESS)
+                    mac_address = static_mapping_data.get(DHCP_SERVER_MAC_ADDRESS, "")
+
+                    extracted_devices[mac_address] = {
+                        DEVICE_DATA_NAME: hostname,
+                        DEVICE_DATA_IP: ip_address,
+                        DEVICE_DATA_DOMAIN: domain_name,
+                    }
+
         try:
-            service = data.get(DATA_SYSTEM_SERVICE, {})
-            dhcp_server = service.get(DATA_SYSTEM_SERVICE_DHCP_SERVER, {})
-            shared_network_names = dhcp_server.get(DHCP_SERVER_SHARED_NETWORK_NAME, {})
-
-            extracted_devices = set()
-
-            for shared_network_name in shared_network_names:
-                shared_network_name_data = shared_network_names.get(shared_network_name, {})
-                subnets = shared_network_name_data.get(DHCP_SERVER_SUBNET, {})
-
-                for subnet in subnets:
-                    subnet_data = subnets.get(subnet, {})
-
-                    domain_name = subnet_data.get(SYSTEM_DATA_DOMAIN_NAME)
-                    static_mappings = subnet_data.get(DHCP_SERVER_STATIC_MAPPING, {})
-
-                    for hostname in static_mappings:
-                        static_mapping_data = static_mappings.get(hostname, {})
-
-                        ip_address = static_mapping_data.get(DHCP_SERVER_IP_ADDRESS)
-                        mac_address = static_mapping_data.get(DHCP_SERVER_MAC_ADDRESS)
-
-                        existing_device_data = self._devices.get(mac_address)
-
-                        if existing_device_data is None:
-                            device_data = EdgeOSDeviceData(hostname, ip_address, mac_address, domain_name)
-                        else:
-                            if hostname != existing_device_data.hostname:
-                                await self._delete_device(existing_device_data.unique_id)
-                                device_data = EdgeOSDeviceData(hostname, ip_address, mac_address, domain_name)
-                            else:
-                                device_data = existing_device_data
-                                device_data.ip = ip_address
-                                device_data.domain = domain_name
-
-                        extracted_devices.add(device_data.unique_id)
-                        self._devices[device_data.unique_id] = device_data
-                        self._devices_ip_mapping[device_data.ip] = device_data.unique_id
-
-            removed_devices = self._devices.keys() - extracted_devices
+            removed_devices = self._devices.keys() - extracted_devices.keys()
             for device_id in removed_devices:
                 await self._delete_device(device_id)
+
+            for mac_address, static_mapping_data in extracted_devices.items():
+                existing_device_data = self._devices.get(mac_address)
+
+                hostname = static_mapping_data.get(DEVICE_DATA_NAME)
+                ip_address = static_mapping_data.get(DEVICE_DATA_IP)
+                domain_name = static_mapping_data.get(DEVICE_DATA_DOMAIN)
+
+                if existing_device_data is None:
+                    device_data = EdgeOSDeviceData(hostname, ip_address, mac_address, domain_name)
+                else:
+                    if hostname != existing_device_data.hostname:
+                        await self._delete_device(existing_device_data.unique_id)
+                        device_data = EdgeOSDeviceData(hostname, ip_address, mac_address, domain_name)
+                    else:
+                        device_data = existing_device_data
+                        device_data.ip = ip_address
+                        device_data.domain = domain_name
+
+                self._devices[device_data.unique_id] = device_data
+                self._devices_ip_mapping[device_data.ip] = device_data.unique_id
 
         except Exception as ex:
             exc_type, exc_obj, tb = sys.exc_info()
