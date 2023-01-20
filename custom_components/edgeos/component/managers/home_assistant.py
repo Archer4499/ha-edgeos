@@ -644,6 +644,34 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
 
         return device
 
+    async def _delete_device(self, unique_id: str):
+        device = self._devices.get(unique_id)
+        name = self._get_device_name(device)
+
+        try:
+            active_entity_ids = self._get_active_entity_ids_from_device(device)
+
+            monitored_entity_id = active_entity_ids.get("monitored_entity_id")
+            if monitored_entity_id is not None:
+                _LOGGER.error(f"Deleting actions of device: {monitored_entity_id}")
+                self.delete_action(monitored_entity_id, ACTION_CORE_ENTITY_TURN_ON)
+                self.delete_action(monitored_entity_id, ACTION_CORE_ENTITY_TURN_OFF)
+
+            for entity_id in active_entity_ids.values():
+                self.entity_manager.delete_entity(entity_id)
+
+            await self.storage_api.set_monitored_device(unique_id, False)
+
+            await self.device_manager.delete_device(name)
+            del self._devices_ip_mapping[device.ip]
+            del self._devices[unique_id]
+
+        except Exception as ex:
+            exc_type, exc_obj, tb = sys.exc_info()
+            line_number = tb.tb_lineno
+
+            _LOGGER.error(f"Failed to delete Device: {name}, Error: {ex}, Line: {line_number}")
+
     def _set_ha_device(self, name: str, model: str, manufacturer: str, version: str | None = None):
         device_details = self.device_manager.get(name)
 
@@ -1277,6 +1305,26 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
         await self.storage_api.set_unit(option)
 
         await self._reload_integration()
+
+    def _get_active_entity_ids_from_device(self, device: EdgeOSDeviceData) -> dict[str, str]:
+        active_entity_ids = {}
+
+        device_name = self._get_device_name(device)
+
+        monitored_entity_name = f"{device_name} Monitored"
+        active_entity_ids["monitored_entity_id"] = EntityData.generate_unique_id(DOMAIN_SWITCH, monitored_entity_name)
+
+        is_monitored = self.storage_api.monitored_devices.get(device.unique_id, False)
+        if is_monitored:
+            tracker_entity_name = f"{device_name}"
+            active_entity_ids["tracker_entity_id"] = EntityData.generate_unique_id(DOMAIN_DEVICE_TRACKER, tracker_entity_name)
+
+            stats = device.get_stats()
+            for stat_key in stats:
+                stat_entity_name = f"{device_name} {stat_key}"
+                active_entity_ids[stat_key] = EntityData.generate_unique_id(DOMAIN_SENSOR, stat_entity_name)
+
+        return active_entity_ids
 
     def _get_device_from_entity(self, entity: EntityData) -> EdgeOSDeviceData:
         unique_id = entity.details.get(ENTITY_UNIQUE_ID)
