@@ -230,6 +230,13 @@ class EntityManager:
 
         return entity
 
+    def delete_entity(self, unique_id: str):
+        entity = self.get(unique_id)
+
+        entity.status = EntityStatus.DELETED
+
+        self.entities[unique_id] = entity
+
     def set_entity(self,
                    domain: str,
                    entry_id: str,
