@@ -11,17 +11,16 @@ class EdgeOSDeviceData:
     ip: str
     mac: str
     domain: str | None
-    is_leased: bool
-    traffic: EdgeOSTrafficData
+    received: EdgeOSTrafficData
+    sent: EdgeOSTrafficData
 
-    def __init__(self, hostname: str, ip: str, mac: str, domain: str | None, is_leased: bool):
+    def __init__(self, hostname: str, ip: str, mac: str, domain: str | None):
         self.hostname = hostname
         self.ip = ip
         self.mac = mac
         self.domain = domain
         self.received = EdgeOSTrafficData(TRAFFIC_DATA_DIRECTION_RECEIVED)
         self.sent = EdgeOSTrafficData(TRAFFIC_DATA_DIRECTION_SENT)
-        self.is_leased = is_leased
 
     @property
     def unique_id(self) -> str:
@@ -64,7 +63,6 @@ class EdgeOSDeviceData:
             DEVICE_DATA_RECEIVED: self.received.to_dict(),
             DEVICE_DATA_SENT: self.sent.to_dict(),
             ENTITY_UNIQUE_ID: self.unique_id,
-            DHCP_SERVER_LEASED: self.is_leased
         }
 
         return obj

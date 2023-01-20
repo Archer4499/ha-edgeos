@@ -14,6 +14,7 @@ class EdgeOSSystemData:
     deep_packet_inspection: bool | None
     traffic_analysis_export: bool | None
     leased_devices: int
+    leased_device_list: dict[str, list[str, str]]
     fw_version: str | None
     sw_version: str | None
     upgrade_available: bool
@@ -36,6 +37,7 @@ class EdgeOSSystemData:
         self.deep_packet_inspection = None
         self.traffic_analysis_export = None
         self.leased_devices = 0
+        self.leased_device_list = {}
         self.fw_version = None
         self.sw_version = None
         self.product = None
