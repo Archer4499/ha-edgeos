@@ -2,6 +2,8 @@ import logging
 
 from homeassistant.helpers.device_registry import async_get
 
+from ...configuration.helpers.const import DEFAULT_NAME
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -40,6 +42,9 @@ class DeviceManager:
             device_dr = dr.async_get_device(device_identifiers, device_connections)
 
             if device_dr is not None:
+                if device.get("via_device") == (DEFAULT_NAME, self._ha.system_name):
+                    dr.async_update_device(device_dr.id, via_device_id=None)
+
                 config_id = self._ha.entry_id
                 dr.async_update_device(device_dr.id, remove_config_entry_id=config_id)
 
