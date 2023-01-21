@@ -230,12 +230,13 @@ class EntityManager:
 
         return entity
 
-    def delete_entity(self, unique_id: str):
+    async def delete_entity(self, unique_id: str):
         entity = self.get(unique_id)
 
         entity.status = EntityStatus.DELETED
-
         self.entities[unique_id] = entity
+
+        await self._async_delete_components()
 
     def set_entity(self,
                    domain: str,

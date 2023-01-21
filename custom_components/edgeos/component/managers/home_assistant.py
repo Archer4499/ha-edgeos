@@ -668,16 +668,16 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
 
             monitored_entity_id = active_entity_ids.get("monitored_entity_id")
             if monitored_entity_id is not None:
-                _LOGGER.error(f"Deleting actions of device: {monitored_entity_id}")
                 self.delete_action(monitored_entity_id, ACTION_CORE_ENTITY_TURN_ON)
                 self.delete_action(monitored_entity_id, ACTION_CORE_ENTITY_TURN_OFF)
 
             for entity_id in active_entity_ids.values():
-                self.entity_manager.delete_entity(entity_id)
+                await self.entity_manager.delete_entity(entity_id)
 
             await self.storage_api.set_monitored_device(unique_id, False)
 
             await self.device_manager.delete_device(name)
+
             del self._devices_ip_mapping[device.ip]
             del self._devices[unique_id]
 
