@@ -658,8 +658,7 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
 
         return device
 
-    def _set_ha_device(self, name: str, model: str, manufacturer: str,
-                       version: str | None = None, configuration_url: str | None = None):
+    def _set_ha_device(self, name: str, model: str, manufacturer: str, version: str | None = None):
         device_details = self.device_manager.get(name)
 
         device_details_data = {
@@ -668,7 +667,7 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
             "manufacturer": manufacturer,
             "model": model,
             "sw_version": version,
-            "configuration_url": configuration_url,
+            "configuration_url": self._system.configuration_url,
         }
 
         if name != self.system_name:
@@ -680,8 +679,7 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
             _LOGGER.debug(f"Created HA device {name} [{model}]")
 
     def _load_main_device(self):
-        self._set_ha_device(self.system_name, self._system.product, MANUFACTURER,
-                            self._system.fw_version, self._system.configuration_url)
+        self._set_ha_device(self.system_name, self._system.product, MANUFACTURER, self._system.fw_version)
 
     def _load_device_device(self, device: EdgeOSDeviceData):
         name = self._get_device_name(device)
