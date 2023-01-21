@@ -26,20 +26,22 @@ class DeviceManager:
         dr = async_get(self._hass)
         dr.async_clear_config_entry(entry_id)
 
-    async def delete_device(self, name):
+    async def delete_device(self, name: str):
         _LOGGER.info(f"Deleting device {name}")
 
-        device = self._devices[name]
-
-        device_identifiers = device.get("identifiers", {})
-        device_connections = device.get("connections", {})
-
-        dr = async_get(self._hass)
-
-        device = dr.async_get_device(device_identifiers, device_connections)
+        device = self._devices.get(name)
 
         if device is not None:
-            dr.async_remove_device(device.id)
+            device_identifiers = device.get("identifiers", {})
+            device_connections = device.get("connections", {})
+
+            dr = async_get(self._hass)
+
+            device_dr = dr.async_get_device(device_identifiers, device_connections)
+
+            if device_dr is not None:
+                config_id = self._ha.entry_id
+                dr.async_update_device(device_dr.id, remove_config_entry_id=config_id)
 
     async def async_remove(self):
         for device_name in self._devices:
