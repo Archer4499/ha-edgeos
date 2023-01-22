@@ -691,7 +691,7 @@ class EdgeOSHomeAssistantManager(HomeAssistantManager):
             "default_manufacturer": DEFAULT_NAME,
             "default_model": "Device",
             "connections": {("mac", device.mac)},
-            "via_device": (DEFAULT_NAME, self.system_name),
+            # "via_device": (DEFAULT_NAME, self.system_name),
         }
 
         if device_details is None or device_details != device_details_data:
